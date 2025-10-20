@@ -2,6 +2,8 @@ package com.example.clientapp;
 
 import com.example.clientapp.config.PropertiesInfo;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @SpringBootApplication
 public class ClientApp implements CommandLineRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientApp.class);
+
     private WebClient webClient;
     private final Map<String, LocalDateTime> activeUsers = new ConcurrentHashMap<>();
     private final Duration apiCooldown = Duration.ofMinutes(5);
@@ -36,12 +40,12 @@ public class ClientApp implements CommandLineRunner {
 
     @PostConstruct
     public void init() {
-        this.webClient = webClientBuilder
-                .baseUrl("http://" + propertiesInfo.getMainServerIp() + ":" + propertiesInfo.getServerPort())
-                .build();
+        String baseUrl = "http://" + propertiesInfo.getMainServerIp() + ":" + propertiesInfo.getServerPort();
+        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
 
-        System.out.println("✅ WebClient initialized with: " +
-                "http://" + propertiesInfo.getMainServerIp() + ":" + propertiesInfo.getServerPort());
+        log.info("✅ WebClient initialized with base URL: {}", baseUrl);
+        log.info("Loaded properties: mainServerIp={}, port={}",
+                propertiesInfo.getMainServerIp(), propertiesInfo.getServerPort());
     }
 
     public static void main(String[] args) {
@@ -50,29 +54,36 @@ public class ClientApp implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        System.out.println("Listening for Windows login/logout events via Event Log...");
+        log.info("🔍 Starting Windows event listener for login/logout events...");
 
         String lastEventId = "";
 
         while (true) {
             try {
                 Event latestEvent = getLatestEvent();
-                if (latestEvent != null && !latestEvent.recordId.equals(lastEventId)) {
 
+                if (latestEvent != null && !latestEvent.recordId.equals(lastEventId)) {
                     String username = latestEvent.username;
                     String eventType = latestEvent.eventType;
+
+                    log.info("🆕 New event detected: [RecordID={}, User={}, Type={}]", latestEvent.recordId, username, eventType);
 
                     if ("LOGIN".equals(eventType)) {
                         LocalDateTime lastHit = activeUsers.get(username);
                         if (lastHit == null || Duration.between(lastHit, LocalDateTime.now()).compareTo(apiCooldown) > 0) {
+                            log.info("🚀 Sending LOGIN event for user '{}'", username);
                             sendEvent(username, eventType);
                             activeUsers.put(username, LocalDateTime.now());
                         } else {
-                            System.out.println("Skipping API hit for " + username + " (still within 5 mins)");
+                            log.debug("Skipping API hit for '{}' (still within cooldown: {} mins)",
+                                    username, apiCooldown.toMinutes());
                         }
                     } else if ("LOGOUT".equals(eventType)) {
+                        log.info("📴 Sending LOGOUT event for user '{}'", username);
                         sendEvent(username, eventType);
-                        activeUsers.remove(username); // reset so next login triggers API
+                        activeUsers.remove(username);
+                    } else {
+                        log.warn("⚠️ Unknown event type detected: {}", eventType);
                     }
 
                     lastEventId = latestEvent.recordId;
@@ -80,14 +91,17 @@ public class ClientApp implements CommandLineRunner {
 
                 Thread.sleep(5000);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("❌ Exception in main event loop: {}", e.getMessage(), e);
             }
         }
     }
 
     private Event getLatestEvent() {
         try {
-            ProcessBuilder pb = new ProcessBuilder("wevtutil", "qe", "Security", "/q:*[System[(EventID=4624 or EventID=4634)]]", "/f:xml", "/c:1");
+            ProcessBuilder pb = new ProcessBuilder(
+                    "wevtutil", "qe", "Security",
+                    "/q:*[System[(EventID=4624 or EventID=4634)]]", "/f:xml", "/c:1"
+            );
             Process process = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder xml = new StringBuilder();
@@ -95,10 +109,18 @@ public class ClientApp implements CommandLineRunner {
             while ((line = reader.readLine()) != null) {
                 xml.append(line);
             }
-            if (xml.isEmpty()) return null;
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.toString().getBytes()));
+
+            if (xml.isEmpty()) {
+                log.debug("No new event detected in Windows Security log.");
+                return null;
+            }
+
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                    .parse(new java.io.ByteArrayInputStream(xml.toString().getBytes()));
+
             String recordId = doc.getElementsByTagName("EventRecordID").item(0).getTextContent();
             String eventId = doc.getElementsByTagName("EventID").item(0).getTextContent();
+
             NodeList dataList = doc.getElementsByTagName("Data");
             String username = "";
             for (int i = 0; i < dataList.getLength(); i++) {
@@ -108,37 +130,58 @@ public class ClientApp implements CommandLineRunner {
                     break;
                 }
             }
-            String eventType = "UNKNOWN";
-            if ("4624".equals(eventId)) eventType = "LOGIN";
-            if ("4634".equals(eventId)) eventType = "LOGOUT";
+
+            String eventType = switch (eventId) {
+                case "4624" -> "LOGIN";
+                case "4634" -> "LOGOUT";
+                default -> "UNKNOWN";
+            };
+
+            log.debug("Parsed Event: recordId={}, username={}, eventId={}, eventType={}",
+                    recordId, username, eventId, eventType);
+
             return new Event(recordId, username, eventType);
+
         } catch (Exception e) {
-             e.printStackTrace();
+            log.error("Error while reading Windows Event Log: {}", e.getMessage(), e);
             return null;
         }
     }
 
     private void sendEvent(String username, String eventType) {
-        String timestamp = java.time.LocalDateTime.now().toString();
-        String systemIp = getSystemIp();
-        UserEvent event = new UserEvent(username, eventType, timestamp, systemIp);
-        System.out.println(" User Event : "+event);
-        Boolean response = webClient.post().uri("/api/user-event").bodyValue(event).retrieve().bodyToMono(Boolean.class).block();
-        System.out.println("API response: " + response);
+        try {
+            String timestamp = LocalDateTime.now().toString();
+            String systemIp = getSystemIp();
+            UserEvent event = new UserEvent(username, eventType, timestamp, systemIp);
+
+            log.info("📡 Sending event to server: {}", event);
+
+            Boolean response = webClient.post()
+                    .uri("/api/user-event")
+                    .bodyValue(event)
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+
+            log.info("✅ API response for user '{}': {}", username, response);
+
+        } catch (Exception e) {
+            log.error("❌ Failed to send event for user '{}': {}", username, e.getMessage(), e);
+        }
     }
 
     private String getSystemIp() {
         try {
-            return java.net.InetAddress.getLocalHost().getHostAddress();
+            String ip = java.net.InetAddress.getLocalHost().getHostAddress();
+            log.debug("Resolved system IP: {}", ip);
+            return ip;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to resolve system IP: {}", e.getMessage(), e);
             return "UNKNOWN";
         }
     }
 
-    record Event(String recordId, String username, String eventType) {
-    }
+    record Event(String recordId, String username, String eventType) {}
 
-    record UserEvent(String username, String eventType, String timestamp, String systemIp) {
-    }
+    record UserEvent(String username, String eventType, String timestamp, String systemIp) {}
 }
