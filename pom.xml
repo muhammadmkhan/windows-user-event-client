@@ -11,6 +11,7 @@
     <properties>
         <java.version>17</java.version>
         <spring-boot.version>3.5.5</spring-boot.version>
+        <javafx.version>17.0.11</javafx.version>
     </properties>
 
     <dependencies>
@@ -33,6 +34,24 @@
             <artifactId>jna-platform</artifactId>
             <version>5.17.0</version>
         </dependency>
+
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

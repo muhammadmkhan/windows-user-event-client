@@ -1,5 +1,5 @@
 com\example\clientapp\ClientApp.class
-com\example\clientapp\ClientApp$Event.class
-com\example\clientapp\ClientApp$UserEvent.class
+com\example\clientapp\ClientFxApp.class
 com\example\clientapp\config\PropertiesInfo.class
 com\example\clientapp\controller\ClientController.class
+com\example\clientapp\controller\LockScreenController.class

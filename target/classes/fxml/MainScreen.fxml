@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.clientapp.controller.MainScreenController"
+            style="-fx-background-color: #1e1e1e;">
+
+    <!-- Header Bar -->
+    <top>
+        <HBox spacing="20" style="-fx-background-color: #252526; -fx-padding: 10 20 10 20;">
+            <Label text="🎮 FunFactor Game Launcher"
+                   style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Logout" fx:id="logoutBtn" style="-fx-background-color: #0078d7; -fx-text-fill: white;"/>
+        </HBox>
+    </top>
+
+    <!-- Game Area -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background: transparent;">
+            <content>
+                <TilePane fx:id="gameContainer"
+                          hgap="25" vgap="25"
+                          alignment="CENTER"
+                          style="-fx-padding: 20;"
+                          prefTileWidth="150" prefTileHeight="150"/>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

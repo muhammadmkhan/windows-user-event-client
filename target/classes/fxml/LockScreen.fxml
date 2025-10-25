@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.clientapp.controller.LockScreenController"
+            style="-fx-background-color: black;">
+    <VBox alignment="CENTER" spacing="15" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+        <Label text="🔒 FunFactor POS Login" style="-fx-text-fill: white; -fx-font-size: 24px;"/>
+        <TextField fx:id="usernameField" promptText="Username" maxWidth="300"/>
+        <PasswordField fx:id="passwordField" promptText="Password" maxWidth="300"/>
+        <Button text="Login" onAction="#handleLogin" style="-fx-padding:10 30;"/>
+        <Label fx:id="messageLabel" style="-fx-text-fill: red;"/>
+    </VBox>
+</AnchorPane>
