@@ -1,6 +1,8 @@
 package com.example.clientapp.controller;
 
 
+import com.example.clientapp.ClientService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,16 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ClientController {
 
 
+    @Autowired
+    ClientService service;
     @GetMapping("/signOut")
     public void SigOut(){
         try {
-            // Execute Windows logoff command
-            ProcessBuilder pb = new ProcessBuilder("shutdown", "/l");
-            pb.inheritIO();
-            Process process = pb.start();
-
-            // Optionally wait for completion
-            process.waitFor();
+            service.forceLogoffActiveUser();
 
             System.out.print("Logoff command executed successfully.");
         } catch (Exception e) {
@@ -33,5 +31,6 @@ public class ClientController {
     public ResponseEntity<?> isAlive(){
     return ResponseEntity.ok("Breathing");
     }
+
 
 }

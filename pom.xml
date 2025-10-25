@@ -33,6 +33,19 @@
             <artifactId>jna-platform</artifactId>
             <version>5.17.0</version>
         </dependency>
+
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>25</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>25</version>
+        </dependency>
+
     </dependencies>
 
     <build>

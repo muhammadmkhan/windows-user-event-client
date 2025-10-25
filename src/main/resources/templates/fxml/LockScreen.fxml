@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.funfactor.client.controller.LockScreenController"
+            style="-fx-background-color: #1a1a1a;"
+            prefWidth="1920" prefHeight="1080">
+    <VBox alignment="CENTER" spacing="15" layoutX="700" layoutY="300">
+        <Label text="🔒 FunFactor Client Login" style="-fx-text-fill: white; -fx-font-size: 24px;"/>
+        <TextField fx:id="usernameField" promptText="Username" maxWidth="300"/>
+        <PasswordField fx:id="passwordField" promptText="Password" maxWidth="300"/>
+        <Button text="Login" onAction="#handleLogin" style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+        <Label fx:id="messageLabel" style="-fx-text-fill: red;"/>
+    </VBox>
+</AnchorPane>
