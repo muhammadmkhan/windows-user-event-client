@@ -1,5 +1,10 @@
 C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\controller\ClientController.java
 C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\ClientApp.java
 C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\ClientFxApp.java
+C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\config\ApplicationContextProvider.java
+C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\controller\MainScreenController.java
+C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\util\GameProcessManager.java
+C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\util\ShortcutResolver.java
 C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\config\PropertiesInfo.java
 C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\controller\LockScreenController.java
+C:\D\projects\windows-user-event-client\src\main\java\com\example\clientapp\util\KioskLockUtil.java

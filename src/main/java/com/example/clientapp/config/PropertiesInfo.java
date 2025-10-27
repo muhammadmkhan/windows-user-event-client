@@ -11,6 +11,25 @@ public class PropertiesInfo {
     private String mainServerIp;
     private String serverPort;
 
+    public String getKillMePass() {
+        return killMePass;
+    }
+
+    public void setKillMePass(String killMePass) {
+        this.killMePass = killMePass;
+    }
+
+    public String getKillMe() {
+        return killMe;
+    }
+
+    public void setKillMe(String killMe) {
+        this.killMe = killMe;
+    }
+
+    private String killMe;
+    private String killMePass;
+
 
     public String getMainServerIp() {
         return mainServerIp;

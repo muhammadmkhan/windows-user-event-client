@@ -1,12 +1,17 @@
 package com.example.clientapp.util;
 
+import com.example.clientapp.config.ApplicationContextProvider;
+import com.example.clientapp.controller.LockScreenController;
 import javafx.application.Platform;
 import javafx.event.Event;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -16,79 +21,66 @@ public class KioskLockUtil {
 
     private static boolean explorerKilled = false;
     private static Timer focusEnforcer;
-
-    /**
-     * Initialize full kiosk mode:
-     * - Kills Explorer.exe (removes taskbar and desktop)
-     * - Blocks key combos (Alt+Tab, Win, Ctrl+Esc, Alt+F4)
-     * - Forces focus back to stage continuously
-     */
+    private static boolean suspendFocus = false;
+    public static Stage launcherStage;
+    @Autowired
+    private static LockScreenController lockScreenController;
     public static void enableKioskMode(Stage stage, Scene scene) {
+
+        launcherStage = stage;
         killExplorer();
 
-        stage.setOnCloseRequest(Event::consume);
         stage.setAlwaysOnTop(true);
         stage.setFullScreen(true);
         stage.setResizable(false);
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+        stage.setOnCloseRequest(event -> event.consume());
 
-        // Force back into fullscreen if something tries to minimize or exit
-        stage.fullScreenProperty().addListener((obs, wasFull, isFull) -> {
-            if (!isFull) Platform.runLater(() -> stage.setFullScreen(true));
-        });
-
-        // Maintain focus always
+        // Focus listener
         stage.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (!isNowFocused) Platform.runLater(stage::requestFocus);
+            if (!suspendFocus && !isNowFocused) {
+                Platform.runLater(() -> stage.setFullScreen(true));
+            }
         });
 
-        // Keep enforcing focus every second
+        // Timer enforcing focus
         focusEnforcer = new Timer(true);
         focusEnforcer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Platform.runLater(() -> {
-                    if (!stage.isFocused()) {
+                if (!suspendFocus && !stage.isFocused()) {
+                    Platform.runLater(() -> {
                         stage.toFront();
                         stage.requestFocus();
-                    }
-                });
+                    });
+                }
             }
         }, 2000, 1000);
 
-        // Block all dangerous keys including ESC before stage processes them
+        // Block dangerous keys
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             KeyCode code = event.getCode();
-
-            if ((event.isAltDown() && code == KeyCode.TAB) ||    // Alt+Tab
-                    (event.isAltDown() && code == KeyCode.F4) ||     // Alt+F4
-                    (code == KeyCode.WINDOWS) ||                     // Windows key
-                    (code == KeyCode.META) ||                        // Windows key (meta)
-                    (event.isControlDown() && code == KeyCode.ESCAPE) || // Ctrl+Esc
-                    (code == KeyCode.ESCAPE)) {                      // Plain ESC
+            if ((event.isAltDown() && code == KeyCode.TAB) ||
+                    (event.isAltDown() && code == KeyCode.F4) ||
+                    code == KeyCode.WINDOWS ||
+                    code == KeyCode.META ||
+                    (event.isControlDown() && code == KeyCode.ESCAPE) ||
+                    code == KeyCode.ESCAPE) {
                 event.consume();
             }
         });
 
-        // 🔒 Also block ESC at scene level after bubbling
-        scene.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) event.consume();
-        });
-
-        System.out.println("🔒 Kiosk mode enabled — Escape fully disabled.");
+        System.out.println("🔒 Kiosk mode enabled");
     }
 
+    public static void suspendKioskFocus() {
+        suspendFocus = true;
+    }
 
-    /**
-     * Restores Windows Explorer when the user unlocks
-     */
-    public static void disableKioskMode() {
-        if (focusEnforcer != null) {
-            focusEnforcer.cancel();
-        }
-        startExplorer();
-        System.out.println("🔓 Kiosk mode disabled.");
+    public static void resumeKioskFocus() {
+        suspendFocus = false;
+        System.out.println("🔓 Kiosk focus resumed");
     }
 
     private static void killExplorer() {
@@ -96,10 +88,18 @@ public class KioskLockUtil {
         try {
             Runtime.getRuntime().exec("taskkill /f /im explorer.exe");
             explorerKilled = true;
-            System.out.println("🔒 Explorer.exe killed — full lock mode active.");
+            System.out.println("🔒 Explorer.exe killed");
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void disableKioskMode() {
+        if (focusEnforcer != null) {
+            focusEnforcer.cancel();
+        }
+        startExplorer();
+        System.out.println("🔓 Kiosk mode disabled.");
     }
 
     private static void startExplorer() {
@@ -114,6 +114,38 @@ public class KioskLockUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void minimizeLauncherStage() {
+        if (launcherStage != null) {
+            Platform.runLater(() -> launcherStage.setIconified(true));
+        }
+    }
+
+    public static void showLoginScreen() {
+        Platform.runLater(() -> {
+            try {
+
+
+                // Load login FXML
+                FXMLLoader loader = new FXMLLoader(KioskLockUtil.class.getResource("/fxml/LockScreen.fxml"));
+                loader.setControllerFactory(ApplicationContextProvider.getContext()::getBean);
+
+                Scene scene = new Scene(loader.load());
+
+                launcherStage.setScene(scene);
+/*                launcherStage.setFullScreen(true);
+                launcherStage.setAlwaysOnTop(true);
+                launcherStage.setResizable(false);
+                launcherStage.setFullScreenExitHint("");
+                launcherStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+                launcherStage.setOnCloseRequest(Event::consume);*/
+
+                //enableKioskMode(launcherStage, scene); // re-enable kiosk
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 }

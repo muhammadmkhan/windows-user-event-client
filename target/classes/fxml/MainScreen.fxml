@@ -19,14 +19,8 @@
 
     <!-- Game Area -->
     <center>
-        <ScrollPane fitToWidth="true" style="-fx-background: transparent;">
-            <content>
-                <TilePane fx:id="gameContainer"
-                          hgap="25" vgap="25"
-                          alignment="CENTER"
-                          style="-fx-padding: 20;"
-                          prefTileWidth="150" prefTileHeight="150"/>
-            </content>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent;">
+            <GridPane fx:id="gameGrid" hgap="20" vgap="20" alignment="CENTER" style="-fx-padding: 20;" />
         </ScrollPane>
     </center>
 

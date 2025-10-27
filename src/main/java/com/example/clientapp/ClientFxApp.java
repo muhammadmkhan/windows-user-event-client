@@ -1,6 +1,7 @@
 package com.example.clientapp;
 
 import com.example.clientapp.config.ApplicationContextProvider;
+import com.example.clientapp.controller.MainScreenController;
 import com.example.clientapp.util.KioskLockUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -25,8 +26,6 @@ public class ClientFxApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-
-
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LockScreen.fxml"));
         loader.setControllerFactory(ApplicationContextProvider.getContext()::getBean);
 
@@ -34,6 +33,7 @@ public class ClientFxApp extends Application {
 
         stage.setScene(scene);
         stage.setTitle("FunFactor POS Client");
+/*
         stage.initStyle(StageStyle.UNDECORATED);
         stage.setFullScreen(true);
         stage.setAlwaysOnTop(true);
@@ -41,19 +41,28 @@ public class ClientFxApp extends Application {
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         stage.setOnCloseRequest(Event::consume);
+*/
 
-        // Keep focus
-        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) Platform.runLater(stage::requestFocus);
-        });
+        // Safe controller injection
+        Object controller = loader.getController();
+        if (controller instanceof MainScreenController mainController) {
+            mainController.setStage(stage);
+        }
 
-       KioskLockUtil.enableKioskMode(stage, scene);
+        // Enable kiosk
+//       KioskLockUtil.enableKioskMode(stage, scene);
 
         stage.show();
     }
 
     @Override
     public void stop() {
-        springContext.close();
+        try {
+            if (springContext != null) springContext.close();
+            Platform.exit();
+            System.exit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,10 +1,14 @@
 package com.example.clientapp.controller;
 
 
+import com.example.clientapp.util.GameProcessManager;
+import com.example.clientapp.util.KioskLockUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/client")
@@ -34,4 +38,15 @@ public class ClientController {
     return ResponseEntity.ok("Breathing");
     }
 
+    @PostMapping("/api/logout")
+    @ResponseBody
+    public String forceLogout() {
+        // Close all games
+        GameProcessManager.closeAllGames();
+
+        // Return to login screen
+        KioskLockUtil.showLoginScreen();
+
+        return "OK: All games closed, back to login screen.";
+    }
 }
