@@ -3,11 +3,14 @@ package com.example.clientapp.util;
 import com.example.clientapp.config.ApplicationContextProvider;
 import com.example.clientapp.controller.MainScreenController;
 import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -28,17 +31,17 @@ public class KioskLockUtil {
 
     public static void enableKioskMode(Stage stage, Scene scene) {
         launcherStage = stage;
-/*        killExplorer();
+        killExplorer();
 
 
+        stage.initStyle(StageStyle.UNDECORATED);
         stage.setAlwaysOnTop(true);
         stage.setFullScreen(true);
         stage.setResizable(false);
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         stage.setOnCloseRequest(Event::consume);
-        stage.initStyle(StageStyle.UNDECORATED);
-*/
+
 
         // Enforce focus
         focusEnforcer = new Timer(true);
@@ -139,7 +142,6 @@ public class KioskLockUtil {
 
                 MainScreenController controller = loader.getController();
                 controller.setUsername(username);
-
 
                 launcherStage.setScene(scene);
                 enableKioskMode(launcherStage, scene);

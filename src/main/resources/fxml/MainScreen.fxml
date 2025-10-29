@@ -5,26 +5,67 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.clientapp.controller.MainScreenController"
-            style="-fx-background-color: #1e1e1e;">
+            style="-fx-background-color: linear-gradient(to bottom right, #000428, #004e92);">
 
     <!-- Header Bar -->
     <top>
-        <HBox spacing="20" style="-fx-background-color: #252526; -fx-padding: 10 20 10 20;">
+        <HBox spacing="20"
+              style="-fx-background-color: linear-gradient(to right, #1a0033, #330066);
+                     -fx-padding: 15 25 15 25;
+                     -fx-border-color: rgba(160, 32, 240, 0.4);
+                     -fx-border-width: 0 0 2 0;
+                     -fx-alignment: CENTER_LEFT;">
             <Label text="🎮 FunFactor Game Launcher"
-                   style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-            <Label fx:id="userLabel" text="Welcome, Guest" style="-fx-text-fill: white; -fx-font-size: 16px;"/>
+                   style="-fx-text-fill: #d1c4e9;
+                          -fx-font-size: 20px;
+                          -fx-font-weight: bold;
+                          -fx-effect: dropshadow(three-pass-box, rgba(180, 0, 255, 0.5), 10, 0, 0, 0);"/>
+
             <Region HBox.hgrow="ALWAYS"/>
+
+            <Label fx:id="userLabel"
+                   text="Welcome, Guest 👋"
+                   style="-fx-text-fill: #e0b3ff; -fx-font-size: 15px; -fx-font-weight: 500;"/>
+
             <Button fx:id="logoutButton"
                     text="Logout"
                     onAction="#handleLogout"
-                    style="-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 8;"/>        </HBox>
+                    style="-fx-background-color: linear-gradient(to right, #7b4397, #dc2430);
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 20;
+                           -fx-padding: 8 20;
+                           -fx-effect: dropshadow(gaussian, rgba(220, 36, 48, 0.5), 10, 0, 0, 0);
+                           -fx-cursor: hand;">
+                <HBox.margin>
+                    <Insets left="15"/>
+                </HBox.margin>
+            </Button>
+        </HBox>
     </top>
 
     <!-- Game Area -->
     <center>
-        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent;">
-            <GridPane fx:id="gameGrid" hgap="20" vgap="20" alignment="CENTER" style="-fx-padding: 20;" />
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: transparent;">
+            <GridPane fx:id="gameGrid"
+                      hgap="25"
+                      vgap="25"
+                      alignment="CENTER"
+                      style="-fx-padding: 40;
+                             -fx-background-color: transparent;">
+            </GridPane>
         </ScrollPane>
     </center>
+
+    <!-- Optional footer bar for credits or version -->
+    <bottom>
+        <HBox alignment="CENTER"
+              style="-fx-background-color: transparent;
+                     -fx-padding: 10;">
+            <Label text="© 2025 FunFactor | Powered by Empictus"
+                   style="-fx-text-fill: #aaa;
+                          -fx-font-size: 12px;"/>
+        </HBox>
+    </bottom>
 
 </BorderPane>

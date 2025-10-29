@@ -6,13 +6,12 @@ import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 
 import com.example.clientapp.config.PropertiesInfo;
+import com.example.clientapp.styling.CustomPopUp;
 import com.example.clientapp.util.GameProcessManager;
 import com.example.clientapp.util.KioskLockUtil;
 import com.example.clientapp.util.ShortcutResolver;
 import com.sun.jna.platform.win32.*;
-import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
@@ -25,13 +24,11 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
@@ -99,8 +96,28 @@ public class MainScreenController {
     private void addGameCard(File shortcutFile, int index) {
         VBox card = new VBox(6);
         card.setAlignment(Pos.CENTER);
-        card.setStyle("-fx-background-color: #2c2c2c; -fx-border-color: #444; -fx-padding: 10; -fx-background-radius: 8; -fx-cursor: hand;");
-        card.setPrefSize(140, 140);
+        card.setOnMouseEntered(e -> card.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #2b0066, #4d0099);" +
+                        "-fx-border-color: rgba(180, 32, 255, 0.8);" +
+                        "-fx-border-width: 2;" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-border-radius: 15;" +
+                        "-fx-padding: 15;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(200, 32, 255, 0.8), 25, 0, 0, 8);"
+        ));
+
+        card.setOnMouseExited(e -> card.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #1a0033, #330066);" +
+                        "-fx-border-color: rgba(160, 32, 240, 0.5);" +
+                        "-fx-border-width: 2;" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-border-radius: 15;" +
+                        "-fx-padding: 15;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(180, 32, 255, 0.6), 15, 0, 0, 5);"
+        ));
+
 
         ImageView imageView = new ImageView();
         imageView.setFitWidth(72);
@@ -198,13 +215,14 @@ public class MainScreenController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to logout?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Confirm Logout");
-
+        CustomPopUp.showThemedConfirm(confirm);
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.YES) {
                 performLogout();
             }
         });
     }
+
 
     private void performLogout() {
         System.out.println("🔒 Logging out user: " + username);

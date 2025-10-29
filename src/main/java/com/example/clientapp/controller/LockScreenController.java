@@ -102,18 +102,4 @@ public class LockScreenController {
                 }));
     }
 
-    private void openMainScreen() {
-        try {
-//            KioskLockUtil.disableKioskMode();
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainScreen.fxml"));
-            loader.setControllerFactory(ApplicationContextProvider.getContext()::getBean);
-
-            Scene mainScene = new Scene(loader.load());
-            stage.setScene(mainScene);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

@@ -1,15 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
 <AnchorPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.clientapp.controller.LockScreenController"
-            style="-fx-background-color: black;">
-    <VBox alignment="CENTER" spacing="15" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
-        <Label text="🔒 FunFactor POS Login" style="-fx-text-fill: white; -fx-font-size: 24px;"/>
-        <TextField fx:id="usernameField" promptText="Username" maxWidth="300"/>
-        <PasswordField fx:id="passwordField" promptText="Password" maxWidth="300"/>
-        <Button text="Login" onAction="#handleLogin" style="-fx-padding:10 30;"/>
-        <Label fx:id="messageLabel" style="-fx-text-fill: red;"/>
+            style="-fx-background-color: linear-gradient(to bottom right, #000428, #004e92);
+                   -fx-font-family: 'Poppins';">
+
+    <VBox alignment="CENTER"
+          spacing="20"
+          AnchorPane.topAnchor="0"
+          AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0"
+          AnchorPane.rightAnchor="0"
+          style="-fx-padding: 40;">
+
+        <!-- Title -->
+        <Label text="🔒 FunFactor POS Login"
+               style="-fx-text-fill: #d1c4e9;
+                      -fx-font-size: 26px;
+                      -fx-font-weight: bold;
+                      -fx-text-alignment: center;
+                      -fx-effect: dropshadow(gaussian, rgba(180, 0, 255, 0.5), 15, 0, 0, 0);"/>
+
+        <!-- Subtitle -->
+        <Label text="Welcome back 👋 — please sign in to continue"
+               style="-fx-text-fill: #b39ddb;
+                      -fx-font-size: 14px;"/>
+
+        <!-- Username Field -->
+        <TextField fx:id="usernameField"
+                   promptText="👤 Username"
+                   maxWidth="300"
+                   style="-fx-background-color: rgba(255, 255, 255, 0.1);
+                          -fx-text-fill: white;
+                          -fx-prompt-text-fill: #bbb;
+                          -fx-background-radius: 12;
+                          -fx-border-radius: 12;
+                          -fx-border-color: rgba(160, 32, 240, 0.6);
+                          -fx-border-width: 1.5;
+                          -fx-padding: 10;"/>
+
+        <!-- Password Field -->
+        <PasswordField fx:id="passwordField"
+                       promptText="🔑 Password"
+                       maxWidth="300"
+                       style="-fx-background-color: rgba(255, 255, 255, 0.1);
+                              -fx-text-fill: white;
+                              -fx-prompt-text-fill: #bbb;
+                              -fx-background-radius: 12;
+                              -fx-border-radius: 12;
+                              -fx-border-color: rgba(160, 32, 240, 0.6);
+                              -fx-border-width: 1.5;
+                              -fx-padding: 10;"/>
+
+        <!-- Login Button -->
+        <Button text="🚀 Login"
+                onAction="#handleLogin"
+                maxWidth="200"
+                style="-fx-background-color: linear-gradient(to right, #b388ff, #7c4dff);
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-font-size: 14px;
+                       -fx-background-radius: 20;
+                       -fx-cursor: hand;
+                       -fx-padding: 10 30;
+                       -fx-effect: dropshadow(gaussian, rgba(160, 32, 240, 0.6), 15, 0, 0, 5);">
+            <VBox.margin>
+                <Insets top="10"/>
+            </VBox.margin>
+        </Button>
+
+        <!-- Message Label -->
+        <Label fx:id="messageLabel"
+               style="-fx-text-fill: #ff5252;
+                      -fx-font-size: 13px;
+                      -fx-font-weight: bold;"/>
+
+        <!-- Footer -->
+        <Label text="© 2025 FunFactor | Powered by Empictus 💜"
+               style="-fx-text-fill: #aaa;
+                      -fx-font-size: 11px;
+                      -fx-padding: 20 0 0 0;"/>
     </VBox>
 </AnchorPane>
