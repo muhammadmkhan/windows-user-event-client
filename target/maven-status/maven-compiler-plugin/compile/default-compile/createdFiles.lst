@@ -7,5 +7,7 @@ com\example\clientapp\util\ShortcutResolver.class
 com\example\clientapp\util\KioskLockUtil.class
 com\example\clientapp\config\PropertiesInfo.class
 com\example\clientapp\util\KioskLockUtil$1.class
+com\example\clientapp\styling\CustomPopUp$Delta.class
+com\example\clientapp\styling\CustomPopUp.class
 com\example\clientapp\controller\LockScreenController.class
 com\example\clientapp\controller\MainScreenController.class
