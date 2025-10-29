@@ -4,11 +4,19 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
+
+import com.example.clientapp.config.PropertiesInfo;
 import com.example.clientapp.util.GameProcessManager;
+import com.example.clientapp.util.KioskLockUtil;
 import com.example.clientapp.util.ShortcutResolver;
 import com.sun.jna.platform.win32.*;
+import javafx.animation.FadeTransition;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -17,10 +25,15 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -31,9 +44,17 @@ public class MainScreenController {
 
     private Stage mainStage;
 
+    @FXML
+    private Label userLabel;
+
     private final String GAMES_DIR = "C:\\Games";
     private final int GRID_COLUMNS = 4;
     private final String DEFAULT_IMAGE = "/images/cs.png";
+
+    @Autowired
+    private PropertiesInfo propertiesInfo;
+
+    private String username;
 
     public void setStage(Stage stage) {
         this.mainStage = stage;
@@ -42,6 +63,14 @@ public class MainScreenController {
     @FXML
     public void initialize() {
         loadGames(new File(GAMES_DIR));
+    }
+
+
+    public void setUsername(String username) {
+        this.username = username;
+        if (userLabel != null) {
+            userLabel.setText("Welcome, " + username);
+        }
     }
 
     private void loadGames(File folder) {
@@ -159,6 +188,57 @@ public class MainScreenController {
         }
     }
 
+    @FXML
+    public void logOut(){
 
+    }
+
+    @FXML
+    private void handleLogout() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to logout?", ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Confirm Logout");
+
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                performLogout();
+            }
+        });
+    }
+
+    private void performLogout() {
+        System.out.println("🔒 Logging out user: " + username);
+
+        // Close all games
+        GameProcessManager.closeAllGames();
+        WebClient webClient = WebClient.builder()
+                .baseUrl("http://"+propertiesInfo.getMainServerIp()+":"+propertiesInfo.getServerPort()) // POS API endpoint
+                .build();
+        // Call logout API
+        webClient.post()
+                .uri("/api/customer/logout")
+                .bodyValue(Map.of("username", username))
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(java.time.Duration.ofSeconds(5))
+                .onErrorResume(e -> {
+                    System.out.println("⚠️ Logout API failed: " + e.getMessage());
+                    return Mono.empty();
+                })
+                .subscribe(response -> {
+                    Platform.runLater(() -> {
+                        System.out.println("✅ Logout API response: " + response);
+                        returnToLoginScreen();
+                    });
+                });
+    }
+
+    private void returnToLoginScreen() {
+        try {
+            KioskLockUtil.showLoginScreen();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
 

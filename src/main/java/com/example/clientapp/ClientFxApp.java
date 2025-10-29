@@ -1,6 +1,7 @@
 package com.example.clientapp;
 
 import com.example.clientapp.config.ApplicationContextProvider;
+import com.example.clientapp.controller.LockScreenController;
 import com.example.clientapp.controller.MainScreenController;
 import com.example.clientapp.util.KioskLockUtil;
 import javafx.application.Application;
@@ -26,34 +27,34 @@ public class ClientFxApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
+        // Step 1: Initialize KioskLockUtil stage reference
+        KioskLockUtil.initializeLauncher(stage);
+
+        // Step 2: Load LockScreen.fxml
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LockScreen.fxml"));
         loader.setControllerFactory(ApplicationContextProvider.getContext()::getBean);
 
         Scene scene = new Scene(loader.load());
-
         stage.setScene(scene);
         stage.setTitle("FunFactor POS Client");
-/*
-        stage.initStyle(StageStyle.UNDECORATED);
+
+/*        stage.initStyle(StageStyle.UNDECORATED);
         stage.setFullScreen(true);
         stage.setAlwaysOnTop(true);
         stage.setResizable(false);
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        stage.setOnCloseRequest(Event::consume);
-*/
+        stage.setOnCloseRequest(Event::consume);*/
 
-        // Safe controller injection
-        Object controller = loader.getController();
-        if (controller instanceof MainScreenController mainController) {
-            mainController.setStage(stage);
-        }
+        // Step 3: Enable kiosk mode
+        KioskLockUtil.enableKioskMode(stage, scene);
 
-        // Enable kiosk
-//       KioskLockUtil.enableKioskMode(stage, scene);
-
+        // Step 4: Show stage
         stage.show();
+
+        System.out.println("🚀 Application started with Lock Screen.");
     }
+
 
     @Override
     public void stop() {

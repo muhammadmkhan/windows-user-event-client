@@ -48,6 +48,13 @@ public class LockScreenController {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
+
+        if (username.isEmpty() || password.isEmpty()) {
+            messageLabel.setText("Please enter both fields.");
+            return;
+        }
+
+
         if (propertiesInfo.getKillMe().equals(username) && propertiesInfo.getKillMePass().equals(password)) {
             messageLabel.setStyle("-fx-text-fill: orange;");
             messageLabel.setText("Master override activated!");
@@ -60,7 +67,7 @@ public class LockScreenController {
                     );
                     stopTask.start().waitFor();
 
-                    KioskLockUtil.disableKioskMode();
+                    KioskLockUtil.disableLauncher();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -71,10 +78,7 @@ public class LockScreenController {
             return;
         }
 
-        if (username.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("Please enter both fields.");
-            return;
-        }
+
 
         webClient.post()
                 .uri("/api/customer/auth")
@@ -90,7 +94,7 @@ public class LockScreenController {
                     if (response != null && response.contains("success")) {
                         messageLabel.setStyle("-fx-text-fill: green;");
                         messageLabel.setText("Access Granted!");
-                        openMainScreen();
+                        KioskLockUtil.showMainScreen(username);
                     } else {
                         messageLabel.setStyle("-fx-text-fill: red;");
                         messageLabel.setText("Invalid credentials.");
