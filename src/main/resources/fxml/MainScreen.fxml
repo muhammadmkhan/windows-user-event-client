@@ -22,7 +22,7 @@
                           -fx-effect: dropshadow(three-pass-box, rgba(180, 0, 255, 0.5), 10, 0, 0, 0);"/>
 
             <Region HBox.hgrow="ALWAYS"/>
-
+            <Label fx:id="creditLabel" text="Time Left: 00:00" style="-fx-text-fill: yellow; -fx-font-size: 14px;" />
             <Label fx:id="userLabel"
                    text="Welcome, Guest 👋"
                    style="-fx-text-fill: #e0b3ff; -fx-font-size: 15px; -fx-font-weight: 500;"/>

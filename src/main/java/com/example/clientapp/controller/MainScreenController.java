@@ -9,8 +9,11 @@ import com.example.clientapp.config.PropertiesInfo;
 import com.example.clientapp.styling.CustomPopUp;
 import com.example.clientapp.util.GameProcessManager;
 import com.example.clientapp.util.KioskLockUtil;
-import com.example.clientapp.util.ShortcutResolver;
 import com.sun.jna.platform.win32.*;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -24,12 +27,15 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,6 +49,13 @@ public class MainScreenController {
 
     @FXML
     private Label userLabel;
+
+    @FXML
+    private Label creditLabel;
+
+    private double remainingMinutes;
+    private Timeline countdownTimeline;
+
 
     private final String GAMES_DIR = "C:\\Games";
     private final int GRID_COLUMNS = 4;
@@ -60,6 +73,12 @@ public class MainScreenController {
     @FXML
     public void initialize() {
         loadGames(new File(GAMES_DIR));
+    }
+
+    public void setCreditMinutes(double minutes) {
+        this.remainingMinutes = minutes;
+        updateCreditDisplay();
+        startCountdown();
     }
 
 
@@ -125,7 +144,7 @@ public class MainScreenController {
 
         // Try to extract the icon from the shortcut target
         try {
-            String targetExe = ShortcutResolver.resolveShortcutTarget(shortcutFile);
+            String targetExe = "";/*ShortcutResolver.resolveShortcutTarget(shortcutFile);*/
 
             WinDef.HICON[] largeIcon = new WinDef.HICON[1];
             Shell32.INSTANCE.ExtractIconEx(targetExe, 0, largeIcon, null, 1);
@@ -151,7 +170,11 @@ public class MainScreenController {
 
         card.setOnMouseClicked(evt -> {
             if (evt.getButton() == MouseButton.PRIMARY && evt.getClickCount() == 2) {
-                GameProcessManager.launchGame(shortcutFile, mainStage, f -> {});
+                try {
+                    GameProcessManager.launchGame(shortcutFile, mainStage, f -> {});
+                } catch (IOException | ParseException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
@@ -258,5 +281,54 @@ public class MainScreenController {
             e.printStackTrace();
         }
     }
+    private void updateCreditDisplay() {
+        long minutes = (long) remainingMinutes;
+        long seconds = Math.round((remainingMinutes - minutes) * 60);
+        creditLabel.setText(String.format("⏱ %02d:%02d mins left", minutes, seconds));
+    }
+
+    private void startCountdown() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+
+        countdownTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+                    remainingMinutes -= 1.0 / 60.0; // reduce 1 second
+                    if (remainingMinutes <= 0) {
+                        remainingMinutes = 0;
+                        creditLabel.setText("⏱ 00:00 mins left");
+                        countdownTimeline.stop();
+                        showTimeExpiredPopup();
+                    } else {
+                        updateCreditDisplay();
+                    }
+                })
+        );
+        countdownTimeline.setCycleCount(Animation.INDEFINITE);
+        countdownTimeline.play();
+    }
+
+    private void showTimeExpiredPopup() {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Session Time Over");
+            alert.setHeaderText(null);
+            alert.setContentText("Your time has expired. Logging out...");
+            CustomPopUp.showThemedConfirm(alert);
+            alert.show(); // ✅ use show() not showAndWait()
+
+            // Delay the logout slightly to let user see popup
+            PauseTransition delay = new PauseTransition(Duration.seconds(3));
+            delay.setOnFinished(event -> {
+                alert.close();
+                performLogout();
+/*                GameProcessManager.closeAllGames();
+                KioskLockUtil.showLoginScreen();*/
+            });
+            delay.play();
+        });
+    }
+
 }
 

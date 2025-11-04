@@ -38,13 +38,13 @@ public class ClientFxApp extends Application {
         stage.setScene(scene);
         stage.setTitle("FunFactor POS Client");
 
-/*        stage.initStyle(StageStyle.UNDECORATED);
+        //stage.initStyle(StageStyle.UNDECORATED);
         stage.setFullScreen(true);
         stage.setAlwaysOnTop(true);
         stage.setResizable(false);
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        stage.setOnCloseRequest(Event::consume);*/
+        stage.setOnCloseRequest(Event::consume);
 
         // Step 3: Enable kiosk mode
         KioskLockUtil.enableKioskMode(stage, scene);

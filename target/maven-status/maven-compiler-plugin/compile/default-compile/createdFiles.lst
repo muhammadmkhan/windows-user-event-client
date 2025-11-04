@@ -3,9 +3,11 @@ com\example\clientapp\config\ApplicationContextProvider.class
 com\example\clientapp\ClientFxApp.class
 com\example\clientapp\controller\ClientController.class
 com\example\clientapp\util\GameProcessManager.class
+com\example\clientapp\tests\WindowsShortcut.class
 com\example\clientapp\util\ShortcutResolver.class
 com\example\clientapp\util\KioskLockUtil.class
 com\example\clientapp\config\PropertiesInfo.class
+com\example\clientapp\styling\StageStyling.class
 com\example\clientapp\util\KioskLockUtil$1.class
 com\example\clientapp\styling\CustomPopUp$Delta.class
 com\example\clientapp\styling\CustomPopUp.class

@@ -20,11 +20,16 @@ import java.util.Map;
 @Component
 public class LockScreenController {
 
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label messageLabel;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Label messageLabel;
 
     private WebClient webClient;
+
+    private double creditMinutes;
 
     @Autowired
     private PropertiesInfo propertiesInfo;
@@ -39,7 +44,7 @@ public class LockScreenController {
         }
 
         this.webClient = WebClient.builder()
-                .baseUrl("http://"+propertiesInfo.getMainServerIp()+":"+propertiesInfo.getServerPort()) // POS API endpoint
+                .baseUrl("http://" + propertiesInfo.getMainServerIp() + ":" + propertiesInfo.getServerPort()) // POS API endpoint
                 .build();
     }
 
@@ -79,7 +84,6 @@ public class LockScreenController {
         }
 
 
-
         webClient.post()
                 .uri("/api/customer/auth")
                 .bodyValue(Map.of("username", username, "password", password))
@@ -94,7 +98,8 @@ public class LockScreenController {
                     if (response != null && response.contains("success")) {
                         messageLabel.setStyle("-fx-text-fill: green;");
                         messageLabel.setText("Access Granted!");
-                        KioskLockUtil.showMainScreen(username);
+                        fetchCustomerDetails(username);
+
                     } else {
                         messageLabel.setStyle("-fx-text-fill: red;");
                         messageLabel.setText("Invalid credentials.");
@@ -102,4 +107,28 @@ public class LockScreenController {
                 }));
     }
 
+
+    private void fetchCustomerDetails(String username) {
+        webClient.get()
+                .uri("/api/customer/details/{username}", username)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .onErrorResume(e -> {
+                    Platform.runLater(() ->
+                            messageLabel.setText("Failed to fetch user details: " + e.getMessage()));
+                    return Mono.empty();
+                })
+                .subscribe(details -> Platform.runLater(() -> {
+                    if (details != null && "success".equals(details.get("message"))) {
+                        System.out.println(details);
+                        Number cm = (Number) details.get("creditMinutes");
+                        this.creditMinutes = cm != null ? cm.doubleValue() : 0.0;
+
+
+                        KioskLockUtil.showMainScreen(username, this.creditMinutes);
+                    } else {
+                        messageLabel.setText("User details not found.");
+                    }
+                }));
+    }
 }

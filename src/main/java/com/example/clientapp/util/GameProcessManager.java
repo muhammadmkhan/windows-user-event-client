@@ -1,9 +1,11 @@
 package com.example.clientapp.util;
 
+import com.example.clientapp.tests.WindowsShortcut;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -13,18 +15,18 @@ public class GameProcessManager {
     private static File currentGame;
     private static final Map<File, String> runningGames = new ConcurrentHashMap<>();
 
-    public static void launchGame(File gameFile, Stage mainStage, Consumer<File> onGameExit) {
+    public static void launchGame(File gameFile, Stage mainStage, Consumer<File> onGameExit) throws IOException, ParseException {
         if (gameFile == null || !gameFile.exists()) {
             System.err.println("❌ Game file not found: " + (gameFile != null ? gameFile.getAbsolutePath() : "null"));
             return;
         }
 
         currentGame = gameFile;
-
+        WindowsShortcut windowsShortcut = new WindowsShortcut(gameFile);
         new Thread(() -> {
             try {
                 String exePath = gameFile.getAbsolutePath();
-                String exeName = gameFile.getName();
+                String exeName = windowsShortcut.getDescription()!=null?windowsShortcut.getDescription():"";
                 System.out.println("🎮 Launching: " + exePath);
 
                 // ✅ Suspend kiosk focus safely before launching
@@ -36,6 +38,7 @@ public class GameProcessManager {
                         .start();
 
                 synchronized (runningGames) {
+                    if(gameFile.getName().contains("Counter") || gameFile.getName().contains("Strike")){exeName="hl";};
                     runningGames.put(gameFile, exeName);
                 }
 
@@ -82,15 +85,26 @@ public class GameProcessManager {
     public static void closeAllGames() {
         runningGames.forEach((file, exeName) -> {
             try {
-                Process kill = new ProcessBuilder("taskkill", "/f", "/im", exeName).start();
+                System.out.println(file.getName() +" : "+ exeName);
+                // PowerShell command to find and kill any process whose name contains exeName (case-insensitive)
+                String command = "taskkill /F /IM " + exeName + ".exe";
+                // Run the PowerShell command as administrator
+                ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", command);
+                pb.redirectErrorStream(true);
+                Process kill = pb.start();
                 kill.waitFor();
+
+                // Log the process of forcefully closing the game
                 System.out.println("⚠️ Game forcefully closed: " + file.getAbsolutePath());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+
+        // Clear the runningGames list after closing all tasks
         runningGames.clear();
 
+        // Ensure the kiosk resumes its focus
         Platform.runLater(KioskLockUtil::resumeKioskFocus);
     }
 
@@ -106,4 +120,5 @@ public class GameProcessManager {
         }
         return false;
     }
+
 }

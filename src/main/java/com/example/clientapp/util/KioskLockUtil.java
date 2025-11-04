@@ -2,15 +2,13 @@ package com.example.clientapp.util;
 
 import com.example.clientapp.config.ApplicationContextProvider;
 import com.example.clientapp.controller.MainScreenController;
+import com.example.clientapp.styling.StageStyling;
 import javafx.application.Platform;
-import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -20,9 +18,10 @@ public class KioskLockUtil {
 
     private static boolean explorerKilled = false;
     private static Timer focusEnforcer;
-    private static boolean suspendFocus = false;
+    private static volatile boolean suspendFocus = false;
     private static Stage launcherStage;
-    private static boolean kioskActive = false;
+    private static final boolean kioskActive = false;
+
 
     // ✅ Initialize stage once at app start
     public static void initializeLauncher(Stage stage) {
@@ -31,16 +30,10 @@ public class KioskLockUtil {
 
     public static void enableKioskMode(Stage stage, Scene scene) {
         launcherStage = stage;
-        killExplorer();
+       killExplorer();
 
 
-        stage.initStyle(StageStyle.UNDECORATED);
-        stage.setAlwaysOnTop(true);
-        stage.setFullScreen(true);
-        stage.setResizable(false);
-        stage.setFullScreenExitHint("");
-        stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        stage.setOnCloseRequest(Event::consume);
+        StageStyling.setStageRestrictions(launcherStage);
 
 
         // Enforce focus
@@ -76,7 +69,12 @@ public class KioskLockUtil {
     public static void disableLauncher() {
         if (focusEnforcer != null) {
             focusEnforcer.cancel();
+            focusEnforcer = null;
         }
+        Platform.runLater(() -> {
+            launcherStage.setFullScreen(false);
+            launcherStage.setAlwaysOnTop(false);
+        });
         startExplorer();
         System.out.println("🔓 Kiosk mode disabled.");
     }
@@ -114,8 +112,19 @@ public class KioskLockUtil {
                 loader.setControllerFactory(ApplicationContextProvider.getContext()::getBean);
 
                 Scene scene = new Scene(loader.load());
+                scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                    KeyCode code = event.getCode();
+                    if ((event.isAltDown() && code == KeyCode.TAB)
+                            || (event.isAltDown() && code == KeyCode.F4)
+                            || code == KeyCode.WINDOWS
+                            || code == KeyCode.META
+                            || (event.isControlDown() && code == KeyCode.ESCAPE)
+                            || code == KeyCode.ESCAPE) {
+                        event.consume();
+                    }
+                });
                 launcherStage.setScene(scene);
-
+                StageStyling.setStageRestrictions(launcherStage);
                 enableKioskMode(launcherStage, scene);
                 launcherStage.show();
 
@@ -127,7 +136,7 @@ public class KioskLockUtil {
         });
     }
 
-    public static void showMainScreen(String username) {
+    public static void showMainScreen(String username,double creditMinutes) {
         if (launcherStage == null) {
             System.err.println("❌ Launcher stage not initialized. Call initializeLauncher(stage) first.");
             return;
@@ -142,8 +151,10 @@ public class KioskLockUtil {
 
                 MainScreenController controller = loader.getController();
                 controller.setUsername(username);
+                controller.setCreditMinutes(creditMinutes);
 
                 launcherStage.setScene(scene);
+                StageStyling.setStageRestrictions(launcherStage);
                 enableKioskMode(launcherStage, scene);
                 launcherStage.show();
 
@@ -156,46 +167,14 @@ public class KioskLockUtil {
     }
 
     /**
-     * Enable kiosk mode (disable window decorations, fullscreen, etc.)
-     */
-    public static void enableKioskMode(Stage stage) {
-        if (stage == null) return;
-        launcherStage = stage;
-        kioskActive = true;
-
-        Platform.runLater(() -> {
-            stage.setFullScreen(true);
-            stage.setAlwaysOnTop(true);
-            stage.setResizable(false);
-            stage.setFullScreenExitHint("");
-            stage.setFullScreenExitKeyCombination(null);
-        });
-
-        System.out.println("🟢 Kiosk mode enabled.");
-    }
-
-    /**
-     * Disable kiosk mode (restore normal behavior)
-     */
-    public static void disableKioskMode() {
-        if (launcherStage == null) return;
-        kioskActive = false;
-
-        Platform.runLater(() -> {
-            launcherStage.setFullScreen(false);
-            launcherStage.setAlwaysOnTop(false);
-        });
-
-        System.out.println("🔴 Kiosk mode disabled.");
-    }
-
-    /**
      * Temporarily suspend kiosk focus (for launching external apps/games)
      */
     public static void suspendKioskFocus() {
-        if (!kioskActive || launcherStage == null) return;
+        if (launcherStage == null) return;
 
+        suspendFocus = true; // ✅ Stop focus enforcement
         Platform.runLater(() -> {
+            launcherStage.setFullScreen(false);
             launcherStage.setAlwaysOnTop(false);
             System.out.println("🟡 Kiosk focus suspended (allowing external app).");
         });
@@ -205,9 +184,11 @@ public class KioskLockUtil {
      * Restore kiosk focus after a game or external app closes
      */
     public static void resumeKioskFocus() {
-        if (!kioskActive || launcherStage == null) return;
+        if (launcherStage == null) return;
 
+        suspendFocus = false; // ✅ Resume focus enforcement
         Platform.runLater(() -> {
+            launcherStage.setFullScreen(true);
             launcherStage.setAlwaysOnTop(true);
             launcherStage.toFront();
             launcherStage.requestFocus();
@@ -227,19 +208,6 @@ public class KioskLockUtil {
         });
     }
 
-    /**
-     * Bring back the main launcher when a game closes
-     */
-    public static void restoreLauncherStage() {
-        if (launcherStage == null) return;
-
-        Platform.runLater(() -> {
-            launcherStage.setIconified(false);
-            launcherStage.toFront();
-            launcherStage.requestFocus();
-            System.out.println("🔵 Launcher restored.");
-        });
-    }
 
 
 }
